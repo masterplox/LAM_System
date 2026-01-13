@@ -1,13 +1,13 @@
 "use client"
 
-import type { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
-import { useRouter, usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { MapPin, LogOut, Map, FileText, Users, LayoutDashboard, Settings, Menu } from "lucide-react"
-import { useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import type { User } from "@supabase/supabase-js"
+import { LayoutDashboard, LogOut, Map, MapPin, Menu } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface SidebarProps {
   user: User
@@ -16,9 +16,9 @@ interface SidebarProps {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Properties", href: "/dashboard/properties", icon: Map },
-  { label: "Documents", href: "/dashboard/documents", icon: FileText },
-  { label: "Stakeholders", href: "/dashboard/stakeholders", icon: Users },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  // { label: "Documents", href: "/dashboard/documents", icon: FileText },
+  // { label: "Stakeholders", href: "/dashboard/stakeholders", icon: Users },
+  // { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
 function NavContent({ user, onSignOut, pathname }: { user: User; onSignOut: () => void; pathname: string }) {

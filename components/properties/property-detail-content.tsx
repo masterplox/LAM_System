@@ -1,20 +1,20 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Pencil, Trash2, Grid3X3, DollarSign, User, CreditCard, FileText } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { SubdivisionDialog } from "./subdivision-dialog"
-import { DeleteSubdivisionDialog } from "./delete-subdivision-dialog"
-import { SaleDialog, type Buyer } from "./sale-dialog"
-import { PaymentsDialog } from "./payments-dialog"
-import { DocumentsManager } from "./documents-manager"
-import { AllDocumentsView } from "./all-documents-view"
 import { createClient } from "@/lib/supabase/client"
+import { ArrowLeft, CreditCard, DollarSign, FileText, Grid3X3, Pencil, Plus, Trash2, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { AllDocumentsView } from "./all-documents-view"
+import { DeleteSubdivisionDialog } from "./delete-subdivision-dialog"
+import { DocumentsManager } from "./documents-manager"
+import { PaymentsDialog } from "./payments-dialog"
 import type { Property } from "./properties-content"
+import { SaleDialog, type Buyer } from "./sale-dialog"
+import { SubdivisionDialog } from "./subdivision-dialog"
 
 export interface Subdivision {
   id: string
@@ -54,6 +54,8 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
   const [subdivisionForSale, setSubdivisionForSale] = useState<Subdivision | null>(null)
   const [subdivisionForPayments, setSubdivisionForPayments] = useState<Subdivision | null>(null)
   const [propertyTotalPaid, setPropertyTotalPaid] = useState(0)
+  const [paymentCount, setPaymentCount] = useState(0)
+  const [subdivisionPaymentCounts, setSubdivisionPaymentCounts] = useState<Record<string, number>>({})
   const router = useRouter()
 
   const totalCost = subdivisions.reduce((sum, s) => sum + Number(s.cost), 0)
@@ -62,7 +64,13 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
   // Fetch property payments on mount
   useEffect(() => {
     fetchPropertyPayments()
+    fetchPaymentCount()
   }, [property.id])
+
+  // Fetch subdivision payment counts when subdivisions change
+  useEffect(() => {
+    fetchSubdivisionPaymentCounts()
+  }, [subdivisions])
 
   const fetchPropertyPayments = async () => {
     const supabase = createClient()
@@ -72,6 +80,34 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
       const total = data.reduce((sum, p) => sum + Number(p.amount), 0)
       setPropertyTotalPaid(total)
     }
+  }
+
+  const fetchPaymentCount = async () => {
+    const supabase = createClient()
+    const { count } = await supabase
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("property_id", property.id)
+
+    setPaymentCount(count || 0)
+  }
+
+  const fetchSubdivisionPaymentCounts = async () => {
+    const supabase = createClient()
+    const counts: Record<string, number> = {}
+
+    await Promise.all(
+      subdivisions.map(async (subdivision) => {
+        const { count } = await supabase
+          .from("payments")
+          .select("id", { count: "exact", head: true })
+          .eq("subdivision_id", subdivision.id)
+
+        counts[subdivision.id] = count || 0
+      }),
+    )
+
+    setSubdivisionPaymentCounts(counts)
   }
 
   const handleAddSubdivision = async (title: string, description: string, cost: number) => {
@@ -195,6 +231,7 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
 
   const handlePropertyPaymentChange = async (totalPaid: number) => {
     setPropertyTotalPaid(totalPaid)
+    fetchPaymentCount()
 
     if (totalPaid >= Number(property.sale_price) && property.status === "pending") {
       const supabase = createClient()
@@ -215,8 +252,19 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
     const subdivision = subdivisions.find((s) => s.id === subdivisionId)
     if (!subdivision) return
 
+    // Refresh payment count for this subdivision
+    const supabase = createClient()
+    const { count } = await supabase
+      .from("payments")
+      .select("id", { count: "exact", head: true })
+      .eq("subdivision_id", subdivisionId)
+
+    setSubdivisionPaymentCounts((prev) => ({
+      ...prev,
+      [subdivisionId]: count || 0,
+    }))
+
     if (totalPaid >= salePrice && subdivision.status === "pending") {
-      const supabase = createClient()
       const { data } = await supabase
         .from("subdivisions")
         .update({ status: "sold" })
@@ -289,6 +337,9 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
             <Button variant="outline" onClick={() => setIsPaymentsDialogOpen(true)}>
               <CreditCard className="mr-2 h-4 w-4" />
               Payments
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {paymentCount}
+              </Badge>
             </Button>
           )}
         </div>
@@ -441,10 +492,10 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
                         </span>
                       </div>
 
-                      {subdivision.buyer && (
+                      {(subdivision.buyer || property.buyer) && (
                         <p className="mb-2 flex items-center gap-1 text-sm text-muted-foreground">
                           <User className="h-3 w-3" />
-                          {subdivision.buyer.name}
+                          {subdivision.buyer?.name || property.buyer?.name}
                         </p>
                       )}
 
@@ -476,6 +527,9 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
                           >
                             <CreditCard className="mr-1 h-3 w-3" />
                             Payments
+                            <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">
+                              {subdivisionPaymentCounts[subdivision.id] || 0}
+                            </Badge>
                           </Button>
                         )}
                       </div>
@@ -564,8 +618,8 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
         subdivisionId={subdivisionForPayments?.id}
         subdivisionTitle={subdivisionForPayments?.title}
         propertyTitle={property.title}
-        buyerId={subdivisionForPayments?.buyer_id || undefined}
-        buyer={subdivisionForPayments?.buyer}
+        buyerId={subdivisionForPayments?.buyer_id || property.buyer_id || undefined}
+        buyer={subdivisionForPayments?.buyer || property.buyer}
         salePrice={Number(subdivisionForPayments?.sale_price || 0)}
         onPaymentsChange={(totalPaid) =>
           subdivisionForPayments &&
