@@ -727,7 +727,15 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
     return null
   }
 
-  const propertyBalance = Number(property.sale_price) - propertyTotalPaid
+  // Calculate total paid across all subdivisions
+  const totalPaidAcrossSubdivisions = Object.values(subdivisionTotalPaid).reduce(
+    (sum, paid) => sum + paid,
+    0
+  )
+  
+  // Use subdivision-based calculations: total sale price is sum of all subdivisions
+  // Balance is based on subdivision payments, not property-level payments
+  const propertyBalance = totalSalePrice - totalPaidAcrossSubdivisions
 
   return (
     <div className="p-4 pt-6 lg:p-8">
@@ -771,11 +779,11 @@ export function PropertyDetailContent({ property: initialProperty, initialSubdiv
           <CardContent className="grid gap-4 p-4 sm:grid-cols-4">
             <div>
               <p className="text-xs text-muted-foreground">Sale Price</p>
-              <p className="text-lg font-semibold">{formatCurrency(Number(property.sale_price))}</p>
+              <p className="text-lg font-semibold">{formatCurrency(totalSalePrice)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Total Paid</p>
-              <p className="text-lg font-semibold text-green-600">{formatCurrency(propertyTotalPaid)}</p>
+              <p className="text-lg font-semibold text-green-600">{formatCurrency(totalPaidAcrossSubdivisions)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Balance</p>
