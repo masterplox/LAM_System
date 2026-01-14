@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type { User } from "@supabase/supabase-js"
-import { LayoutDashboard, LogOut, Map, MapPin, Menu } from "lucide-react"
+import { LayoutDashboard, LogOut, Map, MapPin, Menu, Search } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -16,6 +16,7 @@ interface SidebarProps {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Properties", href: "/dashboard/properties", icon: Map },
+  { label: "Search", href: "/dashboard/search", icon: Search },
   // { label: "Documents", href: "/dashboard/documents", icon: FileText },
   // { label: "Stakeholders", href: "/dashboard/stakeholders", icon: Users },
   // { label: "Settings", href: "/dashboard/settings", icon: Settings },
@@ -27,7 +28,7 @@ function NavContent({ user, onSignOut, pathname }: { user: User; onSignOut: () =
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b px-4 text-primary">
         <MapPin className="h-6 w-6" />
-        <span className="text-lg font-semibold">LandAsset</span>
+        <span className="text-lg font-semibold">Codd & Associates</span>
       </div>
 
       {/* Navigation */}
@@ -92,7 +93,7 @@ export function Sidebar({ user }: SidebarProps) {
         </Sheet>
         <div className="flex items-center gap-2 text-primary">
           <MapPin className="h-5 w-5" />
-          <span className="font-semibold">LandAsset</span>
+          <span className="font-semibold">Codd & Associates</span>
         </div>
       </header>
 

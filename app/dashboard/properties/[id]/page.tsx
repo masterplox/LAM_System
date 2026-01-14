@@ -1,6 +1,7 @@
+import { Sidebar } from "@/components/dashboard/sidebar"
+import { PropertyDetailContent } from "@/components/properties/property-detail-content"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { PropertyDetailContent } from "@/components/properties/property-detail-content"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,5 +31,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     .eq("property_id", id)
     .order("created_at", { ascending: false })
 
-  return <PropertyDetailContent property={property} initialSubdivisions={subdivisions || []} />
+  return (
+    <div className="min-h-screen bg-background">
+      <Sidebar user={user} />
+      <main className="lg:pl-64">
+        <PropertyDetailContent property={property} initialSubdivisions={subdivisions || []} />
+      </main>
+    </div>
+  )
 }

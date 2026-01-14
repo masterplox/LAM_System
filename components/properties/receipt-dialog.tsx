@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { FileText, Send, Mail, Download, Loader2, Check, History } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { createClient } from "@/lib/supabase/client"
+import { Check, Download, FileText, History, Loader2, Mail, Send } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import type { Payment } from "./payments-dialog"
 import type { Buyer } from "./sale-dialog"
 
@@ -200,6 +200,14 @@ export function ReceiptDialog({
               <div class="amount">
                 Payment Amount: ${formatCurrency(Number(payment.amount))}
               </div>
+              ${payment.interest_amount && payment.interest_amount > 0 ? `
+              <div class="interest-breakdown" style="margin: 15px 0; padding: 10px; background: #fef3c7; border-radius: 5px; font-size: 12px;">
+                <div style="margin-bottom: 5px;"><strong>Payment Breakdown:</strong></div>
+                <div>Principal: ${formatCurrency(Number(payment.principal_amount || 0))}</div>
+                <div style="color: #ea580c;">Interest (${payment.days_since_last_payment || 0} days): ${formatCurrency(Number(payment.interest_amount))}</div>
+                ${payment.interest_rate_used ? `<div style="color: #666; margin-top: 5px;">Rate: ${(Number(payment.interest_rate_used) * 100).toFixed(3)}% per day</div>` : ""}
+              </div>
+              ` : ""}
               <div class="details">
                 <div class="row"><span class="label">Sale Price</span><span class="value">${formatCurrency(salePrice)}</span></div>
                 <div class="row"><span class="label">Previously Paid</span><span class="value">${formatCurrency(totalPaidBefore)}</span></div>
@@ -292,6 +300,22 @@ export function ReceiptDialog({
                   <div className="rounded-lg bg-primary/10 p-4 text-center">
                     <p className="text-sm text-muted-foreground">Payment Amount</p>
                     <p className="text-2xl font-bold text-primary">{formatCurrency(Number(payment.amount))}</p>
+                    {payment.interest_amount && payment.interest_amount > 0 && (
+                      <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                        <p>
+                          Principal: {formatCurrency(Number(payment.principal_amount || 0))} | Interest:{" "}
+                          <span className="text-orange-600">{formatCurrency(Number(payment.interest_amount))}</span>
+                        </p>
+                        {payment.days_since_last_payment !== null && payment.days_since_last_payment !== undefined && (
+                          <p className="text-muted-foreground">
+                            Interest for {payment.days_since_last_payment} days
+                            {payment.interest_rate_used && (
+                              <span> ({(Number(payment.interest_rate_used) * 100).toFixed(3)}% per day)</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Balance Info */}

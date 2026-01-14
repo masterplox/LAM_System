@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { PropertiesContent } from "@/components/properties/properties-content"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 
 export default async function PropertiesPage() {
   const supabase = await createClient()
@@ -21,7 +21,7 @@ export default async function PropertiesPage() {
       buyer:buyers(*),
       subdivisions (
         id,
-        cost
+        sale_price
       )
     `)
     .order("created_at", { ascending: false })
@@ -34,7 +34,7 @@ export default async function PropertiesPage() {
     ...property,
     subdivision_count: property.subdivisions?.length || 0,
     total_value:
-      property.subdivisions?.reduce((sum: number, sub: { cost: number | null }) => sum + (sub.cost || 0), 0) || 0,
+      property.subdivisions?.reduce((sum: number, sub: { sale_price: number | null }) => sum + (sub.sale_price || 0), 0) || 0,
     subdivisions: undefined,
   }))
 

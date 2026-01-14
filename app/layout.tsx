@@ -8,7 +8,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "LandAsset - Land Asset Management System",
+  title: "Codd and Associates - Land Asset Management System",
   description: "Manage your land assets, documents, and stakeholders all in one place",
   generator: "v0.app",
   icons: {
